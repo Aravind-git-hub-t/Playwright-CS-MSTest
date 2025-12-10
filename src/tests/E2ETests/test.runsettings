@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Overall run configuration -->
+  <RunConfiguration>
+    <!-- Number of parallel test workers -->
+    <!-- 0 = use all logical cores; set 1 for debugging -->
+    <MaxCpuCount>0</MaxCpuCount>
+
+    <!-- Platform target -->
+    <TargetPlatform>x64</TargetPlatform>
+
+    <!-- Results folder -->
+    <ResultsDirectory>TestResults</ResultsDirectory>
+
+    <!-- Test execution timeout (in milliseconds) -->
+    <!-- 5 minutes total test timeout -->
+    <TestSessionTimeout>300000</TestSessionTimeout>
+
+    <!-- MSTest execution behavior -->
+    <ExecutionThreadApartmentState>MTA</ExecutionThreadApartmentState>
+
+    <!-- Logs verbosity -->
+    <ConsoleLoggerParameters>verbosity=detailed</ConsoleLoggerParameters>
+  </RunConfiguration>
+
+  <!-- MSTest-specific settings -->
+  <MSTest>
+    <!-- Timeout for individual test methods -->
+    <MapTestMethod>
+      <!-- Default timeout: 2 minutes -->
+      <TestTimeout>120000</TestTimeout>
+    </MapTestMethod>
+
+    <!-- Cleanup between tests -->
+    <DeploymentEnabled>false</DeploymentEnabled>
+  </MSTest>
+
+  <!-- Data collectors for code coverage -->
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+
+  <!-- Environment variables (useful for Playwright) -->
+  <EnvironmentVariables>
+    <!-- Show Playwright debug logs -->
+    <!-- Uncomment when needed -->
+    <!-- PWDEBUG>1</PWDEBUG> -->
+
+    <!-- Force browser type if required -->
+    <!-- PLAYWRIGHT_BROWSER>chromium</PLAYWRIGHT_BROWSER> -->
+  </EnvironmentVariables>
+</RunSettings>
