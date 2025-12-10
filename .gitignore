@@ -1,0 +1,65 @@
+###########################################
+# .NET / C# build artifacts
+###########################################
+bin/
+obj/
+out/
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+*.db
+
+###########################################
+# Playwright
+###########################################
+# Browser binaries downloaded by 'playwright install'
+ms-playwright/
+
+# Traces, videos, screenshots (optional to ignore)
+trace/
+traces/
+videos/
+screenshots/
+
+###########################################
+# User-specific & OS files
+###########################################
+*.user
+*.suo
+*.tmp
+*.temp
+*.cache
+*.log
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+###########################################
+# VS Code
+###########################################
+.vscode/
+.vscode-test/
+.history/
+
+###########################################
+# IDE-specific
+###########################################
+.idea/
+*.iml
+*.orig
+
+###########################################
+# NuGet packages
+###########################################
+*.nupkg
+packages/
+project.lock.json
+
+###########################################
+# Test-Generated files
+###########################################
+*.cobertura.xml
+coverage/
+coverage-results/
