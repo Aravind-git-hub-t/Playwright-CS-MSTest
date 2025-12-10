@@ -4,5 +4,6 @@ namespace E2ETests.Pages;
 
 public abstract class PlaywrightBase : PageTest
 {
-    // Shared setup/teardown or helpers can go here later.
+    // All Playwright setup is handled by PageTest.
+    // We keep this class as a base for all test classes.
 }

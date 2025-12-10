@@ -50,7 +50,7 @@
   <EnvironmentVariables>
     <!-- Show Playwright debug logs -->
     <!-- Uncomment when needed -->
-    <!-- PWDEBUG>1</PWDEBUG> -->
+    <PWDEBUG>1</PWDEBUG>
 
     <!-- Force browser type if required -->
     <!-- PLAYWRIGHT_BROWSER>chromium</PLAYWRIGHT_BROWSER> -->
