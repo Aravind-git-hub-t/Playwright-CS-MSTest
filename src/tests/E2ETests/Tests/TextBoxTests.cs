@@ -11,10 +11,9 @@ namespace E2ETests.Tests;
 [TestClass]
 public class TextBoxTests : PlaywrightBase
 {
-    private async Task CaptureScreenshotAsync(string tag)
+ private async Task CaptureScreenshotAsync(string tag)
 {
     // BaseDirectory = bin/Debug/net10.0/ during test run.
-    // Go three levels up to reach the E2ETests project folder.
     var projectDir = Path.GetFullPath(
         Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
 
@@ -23,11 +22,14 @@ public class TextBoxTests : PlaywrightBase
 
     // Make tag file-name friendly
     foreach (var c in Path.GetInvalidFileNameChars())
-    {
         tag = tag.Replace(c, '_');
-    }
 
-    var fileName = $"{TestContext.TestName}_{tag}.png";
+    // Generate timestamp: yyyyMMdd_HHmmss
+    var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+    // Final filename format:
+    // TestName_Tag_20251210_235959.png
+    var fileName = $"{TestContext.TestName}_{tag}_{timestamp}.png";
     var fullPath = Path.Combine(screenshotsDir, fileName);
 
     await Page.ScreenshotAsync(new PageScreenshotOptions
@@ -36,7 +38,7 @@ public class TextBoxTests : PlaywrightBase
         FullPage = true
     });
 
-    Console.WriteLine($"[Screenshot] Saved to: {fullPath}");
+    TestContext.WriteLine($"[Screenshot] Saved to: {fullPath}");
 
     TestContext.AddResultFile(fullPath);
 }
