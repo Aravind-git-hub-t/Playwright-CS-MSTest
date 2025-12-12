@@ -1,74 +1,130 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Playwright;   
 using Microsoft.Playwright.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using AventStack.ExtentReports;
+using E2ETests.Reporting;
+using E2ETests.Helpers;
 
 namespace E2ETests.Pages
 {
-    /// <summary>
-    /// A minimal base class for Playwright tests.
-    /// TestCleanup will always take a final screenshot and save it
-    /// to the PROJECT Screenshots folder (src/tests/E2Tests/Screenshots).
-    /// This is deterministic and easy to find.
-    /// </summary>
     public abstract class PlaywrightBase : PageTest
     {
-        // Do not redeclare TestContext if inherited from PageTest.
-        // PageTest provides Page and Test lifecycle already.
+        // Per-test Extent instance and test handle (one HTML file per test)
+        private ExtentReports? _perTestExtent;
+        protected ExtentTest ExtentTest { get; private set; } = null!;
+
+        // Keep track of per-test folder used for results/screenshots
+        private string? _perTestResultsDir;
 
         [TestInitialize]
-        public void Initialize()
+        public void BaseTestInitialize()
         {
-            // Optional per-test initialization can go here.
-        }
+            // Determine test name and timestamp
+            var testName = TestContext?.TestName ?? $"{GetType().Name}_UnknownTest";
+            var safeTestName = MakeFileNameSafe(testName);
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
-        [TestCleanup]
-        public async Task CleanupAsync()
-        {
+            // Create per-test results folder: <project-root>\Results\<TestName>_<timestamp>\
+            var projectRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+            var resultsRoot = Path.Combine(projectRoot, "Results");
+            Directory.CreateDirectory(resultsRoot);
+
+            _perTestResultsDir = Path.Combine(resultsRoot, $"{safeTestName}_{timestamp}");
+            Directory.CreateDirectory(_perTestResultsDir);
+
+            // Create per-test HTML report file in this folder
+            var reportFile = Path.Combine(_perTestResultsDir, $"{safeTestName}_{timestamp}.html");
+
             try
             {
-                // Build a stable project folder path from the assembly base directory.
-                // AppContext.BaseDirectory is typically:
-                //  ...\src\tests\E2ETests\bin\Debug\net10.0\
-                // Walk up to the project folder.
-                var projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
-                var screenshotsDir = Path.Combine(projectDir, "Screenshots");
-                Directory.CreateDirectory(screenshotsDir);
+                // Create a reporter using ExtentManager (reflection-safe)
+                var reporter = ExtentManager.CreateHtmlReporter(reportFile);
 
-                // Create safe tag and timestamp
-                var tag = "FinalResult";
-                foreach (var c in Path.GetInvalidFileNameChars())
-                    tag = tag.Replace(c, '_');
+                // Create a per-test ExtentReports instance and attach the reporter
+                _perTestExtent = new ExtentReports();
+                ExtentManager.AttachReporterTo(_perTestExtent, reporter!);
 
-                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                var fileName = $"{TestContext.TestName}_{tag}_{timestamp}.png";
-                var fullPath = Path.Combine(screenshotsDir, fileName);
+                // Create the ExtentTest for this test (per-test report)
+                ExtentTest = _perTestExtent.CreateTest(testName);
+                ExtentTest.Info($"Test started: {testName}");
 
-                // Take full-page screenshot and save to the stable project path
-                await Page.ScreenshotAsync(new PageScreenshotOptions
-                {
-                    Path = fullPath,
-                    FullPage = true
-                });
-
-                // Make it easy to find: write to test output and attach to test results
-                TestContext.WriteLine($"[Screenshot] Saved to: {fullPath}");
-                TestContext.AddResultFile(fullPath);
             }
             catch (Exception ex)
             {
-                // Never throw from cleanup — log the error and continue
+                try { TestContext?.WriteLine("Per-test report setup error: " + ex.Message); } catch { }
+                // Fallback: create a dummy ExtentTest via assembly-level manager to preserve logging
                 try
                 {
-                    TestContext.WriteLine("Screenshot capture error: " + ex.Message);
+                    ExtentTest = ExtentManager.Instance?.CreateTest(testName) ?? null!;
                 }
-                catch
+                catch { ExtentTest = null!; }
+            }
+        }
+
+        [TestCleanup]
+        public async Task BaseTestCleanupAsync()
+        {
+            try
+            {
+                // Capture final screenshot into the per-test results folder if available,
+                // otherwise default to the original behavior.
+                string? screenshotPath = null;
+                try
                 {
-                    // ignore if TestContext not available
+                    screenshotPath = await ScreenshotHelper.CaptureAsync(TestContext, Page, "FinalResult", _perTestResultsDir);
+                }
+                catch (Exception ex)
+                {
+                    try { TestContext?.WriteLine("Final screenshot capture failed: " + ex.Message); } catch { }
+                }
+
+                if (!string.IsNullOrEmpty(screenshotPath))
+                {
+                    try { ReportHelper.AttachScreenshot(ExtentTest, "Final screenshot", screenshotPath); } catch { }
+                }
+
+                // Log MSTest outcome
+                var outcome = TestContext?.CurrentTestOutcome ?? UnitTestOutcome.Inconclusive;
+
+// write to TestContext output only if available
+                if (TestContext != null)
+                {
+    TestContext.WriteLine($"Test outcome: {outcome}");
+            }
+
+                if (outcome == UnitTestOutcome.Passed)
+                    ExtentTest?.Pass("Test Passed");
+                else if (outcome == UnitTestOutcome.Failed)
+                    ExtentTest?.Fail("Test Failed");
+                else if (outcome == UnitTestOutcome.Inconclusive)
+                    ExtentTest?.Warning("Test Inconclusive");
+                else
+                    ExtentTest?.Skip($"Test ended with outcome: {outcome}");
+
+                // Flush per-test report to disk
+                try
+                {
+                    _perTestExtent?.Flush();
+                }
+                catch (Exception ex)
+                {
+                    try { TestContext?.WriteLine("Per-test report flush failed: " + ex.Message); } catch { }
                 }
             }
+            catch (Exception ex)
+            {
+                try { TestContext?.WriteLine("PlaywrightBase cleanup error: " + ex.Message); } catch { }
+            }
+        }
+
+        // Helper to sanitize folder/file name
+        private static string MakeFileNameSafe(string name)
+        {
+            foreach (var c in Path.GetInvalidFileNameChars())
+                name = name.Replace(c, '_');
+            return name;
         }
     }
 }
