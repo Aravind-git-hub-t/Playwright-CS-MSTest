@@ -4,3 +4,48 @@ trigger:
       - ci-playwright
 
 pr: none
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+
+# Step 1: Install .NET SDK
+- task: UseDotNet@2
+  displayName: 'Install .NET SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '10.x'
+    includePreviewVersions: true
+
+# Step 2: Restore NuGet packages
+- script: dotnet restore
+  displayName: 'Restore dependencies'
+
+# Step 3: Build the solution
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'Build solution'
+
+# Step 4: Install Playwright browsers
+- script: |
+    dotnet tool restore
+    pwsh bin\$(buildConfiguration)\net10\playwright.ps1 install --with-deps
+  displayName: 'Install Playwright browsers'
+
+# Step 5: Run Playwright MSTest tests
+- script: dotnet test src/tests/E2ETests/E2ETests.csproj `
+    --configuration $(buildConfiguration) `
+    --settings src/tests/E2ETests/test.runsettings
+  displayName: 'Run Playwright MSTest tests'
+
+
+# Step 6: Publish test results to Azure DevOps
+- task: PublishTestResults@2
+  displayName: 'Publish test results'
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '**/*.trx'
+    failTaskOnFailedTests: true
