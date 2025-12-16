@@ -36,10 +36,7 @@ steps:
   displayName: 'Install Playwright browsers'
 
 # Step 5: Run Playwright MSTest tests
-- script: |
-    dotnet test src/tests/E2ETests/E2ETests.csproj `
-      --configuration $(buildConfiguration) `
-      --settings src/tests/E2ETests/test.runsettings
+- script: dotnet test src/tests/E2ETests/E2ETests.csproj --configuration $(buildConfiguration) --settings src/tests/E2ETests/test.runsettings
   displayName: 'Run Playwright MSTest tests'
 
 # Step 6: Publish test results to Azure DevOps
