@@ -6,7 +6,7 @@ trigger:
 pr: none
 
 pool:
-  vmImage: 'windows-latest'
+  name: self-hosted-windows
 
 variables:
   buildConfiguration: 'Release'
