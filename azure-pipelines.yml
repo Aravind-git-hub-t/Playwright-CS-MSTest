@@ -22,11 +22,11 @@ steps:
     includePreviewVersions: true
 
 # Step 2: Restore NuGet packages
-- script: dotnet restore
-  displayName: 'Restore dependencies'
+- script: dotnet restore src/MSTest.Playwright.Sample.slnx
+  displayName: 'Restore solution'
 
 # Step 3: Build the solution
-- script: dotnet build --configuration $(buildConfiguration)
+- script: dotnet build src/MSTest.Playwright.Sample.slnx --configuration $(buildConfiguration)
   displayName: 'Build solution'
 
 # Step 4: Install Playwright browsers
