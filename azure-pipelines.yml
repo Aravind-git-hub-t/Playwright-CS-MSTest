@@ -36,7 +36,7 @@ steps:
   displayName: 'Install Playwright browsers'
 
 # Step 5: Run Playwright MSTest tests
-- script: dotnet test src/tests/E2ETests/E2ETests.csproj --configuration $(buildConfiguration) --settings src/tests/E2ETests/test.runsettings
+- script: dotnet test src/tests/E2ETests/E2ETests.csproj --configuration $(buildConfiguration) --settings src/tests/E2ETests/test.runsettings --logger "trx" --results-directory $(Build.ArtifactStagingDirectory)/TestResults
   displayName: 'Run Playwright MSTest tests'
 
 # Step 6: Publish test results to Azure DevOps
@@ -44,5 +44,5 @@ steps:
   displayName: 'Publish test results'
   inputs:
     testResultsFormat: 'VSTest'
-    testResultsFiles: '**/*.trx'
+    testResultsFiles: '$(Build.ArtifactStagingDirectory)/TestResults/*.trx'
     failTaskOnFailedTests: true
