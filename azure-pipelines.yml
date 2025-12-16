@@ -21,7 +21,7 @@ steps:
     version: '10.x'
     includePreviewVersions: true
 
-# Step 2: Restore NuGet packages
+# Step 2: Restore NuGet packages (solution-level, .slnx)
 - script: dotnet restore src/MSTest.Playwright.Sample.slnx
   displayName: 'Restore solution'
 
@@ -29,18 +29,18 @@ steps:
 - script: dotnet build src/MSTest.Playwright.Sample.slnx --configuration $(buildConfiguration)
   displayName: 'Build solution'
 
-# Step 4: Install Playwright browsers
+# Step 4: Install Playwright browsers (CORRECT for MSTest + self-hosted)
 - script: |
-    dotnet tool restore
-    pwsh bin\$(buildConfiguration)\net10\playwright.ps1 install --with-deps
+    dotnet build src/tests/E2ETests/E2ETests.csproj --configuration $(buildConfiguration)
+    pwsh src/tests/E2ETests/bin/$(buildConfiguration)/net10.0/playwright.ps1 install
   displayName: 'Install Playwright browsers'
 
 # Step 5: Run Playwright MSTest tests
-- script: dotnet test src/tests/E2ETests/E2ETests.csproj `
-    --configuration $(buildConfiguration) `
-    --settings src/tests/E2ETests/test.runsettings
+- script: |
+    dotnet test src/tests/E2ETests/E2ETests.csproj `
+      --configuration $(buildConfiguration) `
+      --settings src/tests/E2ETests/test.runsettings
   displayName: 'Run Playwright MSTest tests'
-
 
 # Step 6: Publish test results to Azure DevOps
 - task: PublishTestResults@2
